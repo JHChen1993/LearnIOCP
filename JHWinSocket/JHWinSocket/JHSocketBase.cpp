@@ -108,6 +108,10 @@ void JHSocketBase::_NotiyPackTimeout(char mcode, char ccode)
 	noty_pack.chilCode = ccode;
 	_func_cb(cbt_tot, noty_pack);
 }
+void JHSocketBase::_NotiyPackRet(const PackInfo& pack_ret)
+{
+	_func_cb(cbt_ret, pack_ret);
+}
 bool JHSocketBase::_Read()
 {
 	char recv_buf[MAXBUF_LEN] = { 0 };
@@ -157,6 +161,7 @@ bool JHSocketBase::_Write()
 	} while (_HasSendData());
 	return true;
 }
+//=============================================================================================
 JHClientSocket::JHClientSocket(const char* ip, unsigned short nPort)
 	:JHSocketBase(ip,nPort)
 {
@@ -272,4 +277,12 @@ DWORD CALLBACK JHClientSocket::CustomerProc(LPVOID pParam)
 		}
 	}
 	return 0;
+}
+//=============================================================================================
+JHUploadSoket::JHUploadSoket(const char* ip, unsigned short nPort) :JHSocketBase(ip,nPort)
+{
+}
+
+JHUploadSoket::~JHUploadSoket()
+{
 }

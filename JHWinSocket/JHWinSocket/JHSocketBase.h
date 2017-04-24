@@ -12,6 +12,7 @@
 #include <list>
 #define PACKHEADLEN 8
 
+/// <回调消息类型>
 enum CallBackType
 {
 	cbt_ret, /// <send 服务器返回>
@@ -21,6 +22,7 @@ enum CallBackType
 
 #pragma pack(push)
 #pragma pack(1)
+/// <发送/回调包信息>
 struct PackInfo{
 	PackInfo() :mainCode(0), chilCode(0), nLen(0), pdata(0){}
 	char mainCode;
@@ -28,6 +30,7 @@ struct PackInfo{
 	unsigned int nLen;
 	void* pdata;
 };
+/// <包头>
 struct PackHead
 {
 	PackHead() :syns1(0x33), syns2(0x44), mcode(0), ccode(0), nlen(PACKHEADLEN){}
@@ -37,6 +40,7 @@ struct PackHead
 	char ccode;
 	unsigned int nlen;
 };
+/// <已发送包信息>
 struct SDPackTimeout
 {
 	bool operator== (const SDPackTimeout& tmpack){ return this->mcode == tmpack.mcode && this->ccode == tmpack.ccode; }
@@ -79,10 +83,12 @@ protected:
 	void _SendHeartAlive();
 	/// <查看是否有发送的包未返回>
 	void _ClearupPackInfo();
-	/// <通知 网络错误>
+	/// <通知 网络错误,且关闭套接字>
 	void _NotiySocketError();
 	/// <通知 发送包超时>
 	void _NotiyPackTimeout(char mcode,char ccode);
+	/// <通知 数据包返回>
+	void _NotiyPackRet(const PackInfo& pack_ret);
 	/// <接收数据>
 	bool _Read();
 	/// <发送数据>
@@ -94,10 +100,10 @@ protected:
 	bool _is_valid; /// <是否有效>
 	std::list<PackInfo> _send_buf; /// <发送缓冲>
 	std::list<SDPackTimeout> _tmout_buf; /// <发送协议 是否返回判断>
-	std::function<void(CallBackType, PackInfo)> _func_cb; /// <回调函数>
+	std::function<void(CallBackType, const PackInfo&)> _func_cb; /// <回调函数>
 };
 
-//====================================================处理client的接收和数据解析==================================================
+//================================================处理客户端逻辑的接收和数据解析==================================================
 // 函数ReConnect 重定义了重连函数，需要等待原有线程关闭并创建socket和线程
 // 
 //================================================================================================================================
@@ -108,10 +114,22 @@ public:
 	/// <重连>
 	void ReConnect();
 private:
-	static DWORD CALLBACK SocketIOProc(LPVOID pParam); /// <发送 接收数据>
-	static DWORD CALLBACK CustomerProc(LPVOID pParam); /// <解析数据 处理send超时问题>
+	/// <发送 接收数据>
+	static DWORD CALLBACK SocketIOProc(LPVOID pParam); 
+	/// <解析数据 处理send超时问题>
+	static DWORD CALLBACK CustomerProc(LPVOID pParam); 
+	/// <关闭线程，做清理操作>
 	void _ThreadClose();
 private:
 	HANDLE _sockio_hand;
 	HANDLE _custom_hand;
+};
+class JHUploadSoket :public JHSocketBase
+{
+public:
+	JHUploadSoket(const char* ip, unsigned short nPort);
+	~JHUploadSoket();
+
+private:
+
 };
